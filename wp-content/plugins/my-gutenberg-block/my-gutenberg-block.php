@@ -116,3 +116,55 @@ function register_news_cpt() {
     register_post_type('news', $args);
 }
 add_action('init', 'register_news_cpt');
+
+
+
+
+function add_news_meta_box() {
+  add_meta_box(
+      'news_meta_box',
+      'News Meta',
+      'render_news_meta_box',
+      'news',
+      'normal',
+      'default'
+  );
+}
+add_action('add_meta_boxes', 'add_news_meta_box');
+
+function render_news_meta_box($post) {
+  // Retrieve the existing meta values
+  $author = get_post_meta($post->ID, 'news_author', true);
+  $date = get_post_meta($post->ID, 'news_date', true);
+
+  // Add a nonce field to verify the data later
+  wp_nonce_field('news_meta_box', 'news_meta_box_nonce');
+
+  // Display the fields
+  echo '<label for="news_author">Author:</label>';
+  echo '<input type="text" id="news_author" name="news_author" value="' . esc_attr($author) . '">';
+  echo '<br>';
+  echo '<label for="news_date">Date:</label>';
+  echo '<input type="text" id="news_date" name="news_date" value="' . esc_attr($date) . '">';
+}
+
+function save_news_meta_box_data($post_id) {
+  // Verify the nonce
+  if (!isset($_POST['news_meta_box_nonce']) || !wp_verify_nonce($_POST['news_meta_box_nonce'], 'news_meta_box')) {
+      return;
+  }
+
+  // Check if the current user has permission to save the data
+  if (!current_user_can('edit_post', $post_id)) {
+      return;
+  }
+
+  // Sanitize and save the meta box data
+  if (isset($_POST['news_author'])) {
+      update_post_meta($post_id, 'news_author', sanitize_text_field($_POST['news_author']));
+  }
+  if (isset($_POST['news_date'])) {
+      update_post_meta($post_id, 'news_date', sanitize_text_field($_POST['news_date']));
+  }
+}
+add_action('save_post', 'save_news_meta_box_data');
