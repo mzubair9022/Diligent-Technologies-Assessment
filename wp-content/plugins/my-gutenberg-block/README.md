@@ -1,0 +1,1 @@
+1. Use Custom Post Type (CPT) to store the API Response
